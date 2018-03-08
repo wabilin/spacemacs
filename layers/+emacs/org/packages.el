@@ -158,10 +158,10 @@ Will work on both org-mode and any mode that accepts plain html."
             (forward-char -8))))
 
       (dolist (prefix '(
+                        ("mb" . "babel")
                         ("mC" . "clocks")
                         ("md" . "dates")
                         ("me" . "export")
-                        ("mh" . "headings")
                         ("mi" . "insert")
                         ("miD" . "download")
                         ("ms" . "trees/subtrees")
@@ -171,7 +171,6 @@ Will work on both org-mode and any mode that accepts plain html."
                         ("mti" . "insert")
                         ("mtt" . "toggle")
                         ("mx" . "text")
-                        ("mb" . "src-blocks/babel")
                         ))
         (spacemacs/declare-prefix-for-mode 'org-mode (car prefix) (cdr prefix)))
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
@@ -189,6 +188,7 @@ Will work on both org-mode and any mode that accepts plain html."
 
         "a" 'org-agenda
 
+        "Tc" 'org-toggle-checkbox
         "Te" 'org-toggle-pretty-entities
         "Ti" 'org-toggle-inline-images
         "Tl" 'org-toggle-link-display
@@ -316,6 +316,7 @@ Will work on both org-mode and any mode that accepts plain html."
         "aoa" 'org-agenda-list
         "aoc" 'org-capture
         "aoe" 'org-store-agenda-views
+        "aokg" 'org-clock-goto
         "aoki" 'org-clock-in-last
         "aokj" 'org-clock-jump-to-current-clock
         "aoko" 'org-clock-out
