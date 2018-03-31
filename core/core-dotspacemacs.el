@@ -70,7 +70,7 @@ environment, otherwise it is strongly recommended to let it set to t.")
 
 (defvar dotspacemacs-use-spacelpa nil
   "If non-nil then Spacelpa repository is the primary source to install
-a locked version of packages. If nil then Spacemacs will install the lastest
+a locked version of packages. If nil then Spacemacs will install the latest
 version of packages from MELPA.")
 
 (defvar dotspacemacs-verify-spacelpa-archives nil
@@ -336,6 +336,9 @@ This variable can also be set to a property list for finer control:
   :size-limit-kb 1000)
 The property `:enabled-for-modes' takes priority over `:disabled-for-modes' and
 restricts line-number to the specified list of major-mode.")
+
+(defvar dotspacemacs-enable-server t
+  "If non-nil, start an Emacs server if one is not already running.")
 
 (defvar dotspacemacs-persistent-server nil
   "If non nil advises quit functions to keep server open when quitting.")

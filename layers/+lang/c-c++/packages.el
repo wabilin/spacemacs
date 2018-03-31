@@ -43,11 +43,11 @@
     :init
     (progn
       (add-to-list 'auto-mode-alist
-                   `("\\.h\\'" . ,c-c++-default-mode-for-headers)))
+                   `("\\.h\\'" . ,c-c++-default-mode-for-headers))
+      (add-hook 'c-mode-common-hook 'spacemacs//c-toggle-auto-newline))
     :config
     (progn
       (require 'compile)
-      (c-toggle-auto-newline 1)
       (dolist (mode c-c++-modes)
         (spacemacs/declare-prefix-for-mode mode "mc" "compile")
         (spacemacs/declare-prefix-for-mode mode "mg" "goto")
@@ -71,8 +71,6 @@
     :if c-c++-enable-clang-support
     :init
     (progn
-      (when c-c++-enable-clang-format-on-save
-        (spacemacs/add-to-hooks 'spacemacs/clang-format-on-save c-c++-mode-hooks))
       (dolist (mode c-c++-modes)
         (spacemacs/declare-prefix-for-mode mode "m=" "format")
         (spacemacs/set-leader-keys-for-major-mode mode
