@@ -94,6 +94,7 @@
     - [[#layout-key-bindings][Layout key bindings]]
   - [[#workspaces][Workspaces]]
     - [[#workspace-key-bindings][Workspace key bindings]]
+- [[#environment-variables-and-path-from-the-shell][Environment variables and PATH from the shell]]
 - [[#commands][Commands]]
   - [[#vim-key-bindings][Vim key bindings]]
     - [[#escaping][Escaping]]
@@ -737,6 +738,10 @@ Three styles are available:
 - Emacs,
 - Hybrid (a mix between Vim and Emacs).
 
+To set the editing style set the variable =dotspacemacs-editing-style= to
+either =vim=, =hybrid=, or =emacs=. It possible to pass a list of variables
+as well with the keyword =:variables=, just like for layer variables.
+
 *** Vim
 Spacemacs behaves like in Vim using the [[https://github.com/emacs-evil/evil/][Evil]] mode package to emulate Vim key
 bindings. This is the default style of Spacemacs; it can be set explicitly by
@@ -746,6 +751,29 @@ To bind keys in Vim editing style (=insert state=):
 
 #+BEGIN_SRC emacs-lisp
 (define-key evil-insert-state-map (kbd "C-]") 'forward-char)
+#+END_SRC
+
+When setting the Vim style you can pass any variable supported by =evil-mode=
+with the keyword =:variables=. Spacemacs also supports the followgin editing
+style variables for Vim:
+
+| Variables                                | Description                                                             |
+|------------------------------------------+-------------------------------------------------------------------------|
+| =vim-style-visual-feedback=              | If non-nil then objects are briefly highlighted                         |
+| =vim-style-remap-Y-to-y$=                | If non-nil ~Y~ is remapped to ~y$~ in Evil states                       |
+| =vim-style-retain-visual-state-on-shift= | If non-nil, the shift mappings ~<~ and ~>~ retain visual state          |
+| =vim-style-visual-line-move-text=        | If non-nil, ~J~ and ~K~ move lines up and down when in visual mode      |
+| =vim-style-ex-substitute-global=         | If non-nil, inverse the meaning of ~g~ in =:substitute= Evil ex-command |
+
+Default configuration is:
+
+#+BEGIN_SRC emacs-lisp
+  (setq-default dotspacemacs-editing-style '(vim :variables
+                                                 vim-style-visual-feedback nil
+                                                 vim-style-remap-Y-to-y$ nil
+                                                 vim-style-retain-visual-state-on-shift t
+                                                 vim-style-visual-line-move-text nil
+                                                 vim-style-ex-substitute-global nil)
 #+END_SRC
 
 *** Emacs
@@ -778,23 +806,23 @@ This style can be tweaked to be more like Emacs or more like Vim depending
 on the user preferences. The following variables are available to change the
 style configuration:
 
-- =hybrid-mode-default-state= The default state when opening a new buffer,
-  default is =normal=. Set it to =emacs= for a more emacsy style.
-- =hybrid-mode-enable-hjkl-bindings= If non-nil then packages will configure
-  =h j k l= key bindings for navigation.
-- =hybrid-mode-enable-evilified-state= If non-nil buffer are =evilified= when
-  supported, if nil then =emacs= state is enabled in those buffers instead.
-- =hybrid-mode-use-evil-search-module= If non-nil then use evil own search
-  module which is closer to Vim search behavior.
+| Variables                             | Description                                                                            |
+|---------------------------------------+----------------------------------------------------------------------------------------|
+| =hybrid-style-visual-feedback=        | If non-nil then objects are briefly highlighted                                        |
+| =hybrid-style-default-state=          | The default state when opening a new buffer. Set it to =emacs= for a more emacsy style |
+| =hybrid-style-enable-hjkl-bindings=   | If non-nil then packages will configure =h j k l= key bindings for navigation          |
+| =hybrid-style-enable-evilified-state= | If non-nil buffer are =evilified= when supported, if nil then =emacs= state is enabled |
+| =hybrid-style-use-evil-search-module= | If non-nil then use evil own search module which is closer to Vim search behavior      |
 
 Default configuration is:
 
 #+BEGIN_SRC emacs-lisp
 (setq-default dotspacemacs-editing-style '(hybrid :variables
-                                                  hybrid-mode-enable-evilified-state t
-                                                  hybrid-mode-enable-hjkl-bindings nil
-                                                  hybrid-mode-use-evil-search-module nil
-                                                  hybrid-mode-default-state 'normal)
+                                                  hybrid-style-visual-feedback nil
+                                                  hybrid-style-enable-evilified-state t
+                                                  hybrid-style-enable-hjkl-bindings nil
+                                                  hybrid-style-use-evil-search-module nil
+                                                  hybrid-style-default-state 'normal)
 #+END_SRC
 
 To toggle the hybrid style on and off use ~SPC t E h~ and ~M-m t E h~. When
@@ -1213,6 +1241,13 @@ Available properties:
 | =:relative=           | if non-nil, line numbers are relative to the position of the cursor                          |
 | =:size-limit-kb=      | size limit in kilobytes after which line numbers are not activated                           |
 
+Note that if =:enabled-for-modes= is =nil= or not specified, then the default is
+to enable line numbers in any =prog-mode= and =text-mode= that wasn't explicitly
+disabled via =:disabled-for-modes=. To enable line numbers in a major mode that
+doesn't derive from =prog-mode= or =text-mode=, you must specify it directly in
+=:enabled-for-modes=. To enable line numbers even in non-prog-mode and
+non-text-mode buffers, set =:enabled-for-modes= to =all=.
+
 Examples:
 
 Disable line numbers in dired-mode, doc-view-mode, markdown-mode, org-mode,
@@ -1252,6 +1287,12 @@ Enable line numbers only in programming modes, except for c-mode and c++ mode:
                                              :enabled-for-modes prog-mode
                                              :disabled-for-modes c-mode c++-mode
                                              :size-limit-kb (* dotspacemacs-large-file-size 1000))
+#+END_SRC
+
+Enable line numbers everywhere, even in non-prog-mode and non-text-mode buffers:
+
+#+BEGIN_SRC emacs-lisp
+  (setq-default dotspacemacs-line-numbers '(:enabled-for-modes 'all))
 #+END_SRC
 
 ** Mode-line
@@ -1676,6 +1717,31 @@ There are also some handy globally available key bindings related to workspaces:
 | ~gT~        | go to previous workspace             |
 | ~SPC b W~   | go to workspace and window by buffer |
 
+* Environment variables and PATH from the shell
+To import your environment variable and =PATH= at startup set the variable
+=dotspacemacs-import-env-vars-from-shell=  to non-nil.
+
+This should be necessary only to macOS users and X11 users using the GNU
+build of Emacs.
+
+#+BEGIN_EXAMPLE emacs-lisp
+(setq-default  dotspacemacs-import-env-vars-from-shell (and (display-graphic-p)
+                                                (or (eq system-type 'darwin)
+                                                    (eq window-system 'x))))
+#+END_EXAMPLE
+
+At anytime you can import the environment variables by calling the function
+=spacemacs/loadenv=.
+
+You can define a different shell than the default shell to look for environment
+variables by setting the variable =dotspacemacs-import-env-vars-shell-file-name=
+in your dotfile. Note that =shell-file-name= is not modified by this value.
+
+#+BEGIN_EXAMPLE emacs-lisp
+(defun dotspacemacs/init ()
+  (setq dotspacemacs-import-env-vars-shell-file-name "/usr/local/bin/fish"))
+#+END_EXAMPLE
+
 * Commands
 ** Vim key bindings
 Spacemacs is based on =Vim= modal user interface to navigate and edit text. If
@@ -1837,6 +1903,16 @@ Other help key bindings:
 | ~SPC h k~   | show top-level bindings with =which-key=              |
 | ~SPC h m~   | search available man pages                            |
 | ~SPC h n~   | browse emacs news                                     |
+
+The =Profiler= is a tool that helps you identify why your editor is running
+slowly or consumes a lot of memory. Here are key bindings relate to it:
+
+| Key Binding | Description                 |
+|-------------+-----------------------------|
+| ~SPC h P k~ | stop the profiler           |
+| ~SPC h P r~ | display the profiler report |
+| ~SPC h P s~ | start the profiler          |
+| ~SPC h P w~ | write the report to file    |
 
 Navigation key bindings in =help-mode=:
 
@@ -2101,6 +2177,50 @@ Windows manipulation commands (start with ~w~):
 | ~SPC w w~              | cycle and focus between windows                                             |
 | ~SPC w W~              | select window using [[https://github.com/abo-abo/ace-window][ace-window]]                                              |
 | ~SPC w x~              | delete a window and its current buffer (does not delete the file)           |
+
+Split the current window into multiple ones, deleting all others using the
+following commands:
+
+| Key Binding | Description                               |
+|-------------+-------------------------------------------|
+| ~SPC w 1~   | make 1 window layout                      |
+| ~SPC w 2~   | make 2 windows layout (split vertically)  |
+| ~SPC w 3~   | make 3 windows layout (split vertically)  |
+| ~SPC w 4~   | make 4 windows layout (split in 2x2 grid) |
+
+By default, the commands above ignore some windows, like the filetrees (treemacs
+and neotree) but you can use a prefix argument to force delete them.
+
+| Key Binding     | Description                                                 |
+|-----------------+-------------------------------------------------------------|
+| ~SPC u SPC w 1~ | make 1 window layout with force delete                      |
+| ~SPC u SPC w 2~ | make 2 windows layout (split vertically) with force delete  |
+| ~SPC u SPC w 3~ | make 3 windows layout (split vertically) with force delete  |
+| ~SPC u SPC w 4~ | make 4 windows layout (split in 2x2 grid) with force delete |
+
+You can also configure which windows get ignored when executing the above
+commands by adding a prefix to the =spacemacs-window-split-ignore-prefixes=
+list:
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'spacemacs-window-split-ignore-prefixes "My Favourite Window")
+#+END_SRC
+
+Or if you want a certain ignored window to always be deleted you can remote it
+from the list:
+
+#+BEGIN_SRC emacs-lisp
+(setq spacemacs-window-split-ignore-prefixes
+  (remove treemacs--buffer-name-prefix spacemacs-window-split-ignore-prefixes))
+#+END_SRC
+
+And if you want even more control over the way windows are removed you can
+define your own deletion function:
+
+#+BEGIN_SRC emacs-lisp
+(defun my-delete-other-windows () (delete-other-windows))
+(setq spacemacs-window-split-delete-function 'my-delete-other-windows)
+#+END_SRC
 
 **** Window manipulation transient state
 A convenient window manipulation transient state allows performing most of the
@@ -2716,6 +2836,7 @@ Text related commands (start with ~x~):
 | ~SPC x o~     | use avy to select a link in the frame and open it             |
 | ~SPC x O~     | use avy to select multiple links in the frame and open them   |
 | ~SPC x t c~   | swap (transpose) the current character with the previous one  |
+| ~SPC x t e~   | swap (transpose) the current sexp with the previous one       |
 | ~SPC x t l~   | swap (transpose) the current line with the previous one       |
 | ~SPC x t p~   | swap (transpose) the current paragraph with the previous one  |
 | ~SPC x t s~   | swap (transpose) the current sentence with the previous one   |
@@ -3254,6 +3375,12 @@ export EDITOR="/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c"
 Tip: Remember to use ~:wq~ or ~C-x #~ after you are done editing the file in
 Emacs.
 
+You can set the location of the Emacs server socket by setting =dotspacemacs-server-socket-dir= in your =~./spacemacs=:
+
+#+BEGIN_SRC emacs-lisp
+(setq-default dotspacemacs-server-socket-dir "~/.emacs/server")
+#+END_SRC
+
 See [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Emacs-Server.html][Emacs as a Server]] in the official Emacs manual for more details.
 
 ** Keeping the server alive
@@ -3338,30 +3465,31 @@ with ~SPC SPC spacemacs/recompile-elpa~.
 
 ** Stars, forks and watchers
 
-| Achievements         | Account         |
-|----------------------+-----------------|
-| 100th watcher        | [[https://github.com/adouzzy][adouzzy]]         |
-| 100th fork           | [[https://github.com/balajisivaraman][balajisivaraman]] |
-| 200th fork           | [[https://github.com/alcol80][alcol80]]         |
-| 300th fork           | [[https://github.com/mlopes][mlopes]]          |
-| 2000th fork          | [[https://github.com/Gameguykiler][Gameguykiler]]    |
-| 100th star           | [[https://github.com/Jackneill][Jackneill]]       |
-| 200th star           | [[https://github.com/jb55][jb55]]            |
-| 400th star           | [[https://github.com/dbohdan][dbohdan]]         |
-| 600th star           | [[https://github.com/laat][laat]]            |
-| 700th star           | [[https://github.com/kendall][kendall]]         |
-| 800th star           | [[https://github.com/urso][urso]]            |
-| 900th star           | [[https://github.com/luisgerhorst][luisgerhorst]]    |
-| 1000th star!         | [[https://github.com/rashly][rashly]]          |
-| 2000th star!!        | [[https://github.com/stshine][stshine]]         |
-| 3000th star!!!       | [[https://github.com/TheBB][TheBB]]           |
-| 4000th star!!!!      | [[https://github.com/nixmaniack][nixmaniack]]      |
-| 5000th star!!!!!     | [[https://github.com/StreakyCobra][StreakyCobra]]    |
-| 6000th star!!!!!!    | [[https://github.com/NJBS][NJBS]]            |
-| 7000th star!!!!!!!   | [[https://github.com/mukhali][mukhali]]         |
-| 8000th star!!!!!!!!  | [[https://github.com/shsteven][shsteven]]        |
-| 9000th star!!!!!!!!! | [[https://github.com/deb0ch][deb0ch]]          |
-| 10000th star :star:  | [[https://github.com/colt365][colt365]]         |
+| Achievements               | Account         |
+|----------------------------+-----------------|
+| 100th watcher              | [[https://github.com/adouzzy][adouzzy]]         |
+| 100th fork                 | [[https://github.com/balajisivaraman][balajisivaraman]] |
+| 200th fork                 | [[https://github.com/alcol80][alcol80]]         |
+| 300th fork                 | [[https://github.com/mlopes][mlopes]]          |
+| 2000th fork                | [[https://github.com/Gameguykiler][Gameguykiler]]    |
+| 100th star                 | [[https://github.com/Jackneill][Jackneill]]       |
+| 200th star                 | [[https://github.com/jb55][jb55]]            |
+| 400th star                 | [[https://github.com/dbohdan][dbohdan]]         |
+| 600th star                 | [[https://github.com/laat][laat]]            |
+| 700th star                 | [[https://github.com/kendall][kendall]]         |
+| 800th star                 | [[https://github.com/urso][urso]]            |
+| 900th star                 | [[https://github.com/luisgerhorst][luisgerhorst]]    |
+| 1000th star!               | [[https://github.com/rashly][rashly]]          |
+| 2000th star!!              | [[https://github.com/stshine][stshine]]         |
+| 3000th star!!!             | [[https://github.com/TheBB][TheBB]]           |
+| 4000th star!!!!            | [[https://github.com/nixmaniack][nixmaniack]]      |
+| 5000th star!!!!!           | [[https://github.com/StreakyCobra][StreakyCobra]]    |
+| 6000th star!!!!!!          | [[https://github.com/NJBS][NJBS]]            |
+| 7000th star!!!!!!!         | [[https://github.com/mukhali][mukhali]]         |
+| 8000th star!!!!!!!!        | [[https://github.com/shsteven][shsteven]]        |
+| 9000th star!!!!!!!!!       | [[https://github.com/deb0ch][deb0ch]]          |
+| 10000th star :star:        | [[https://github.com/colt365][colt365]]         |
+| 15000th star :star: :star: | [[https://github.com/missingfaktor][missingfaktor]]   |
 
 ** Gitter chat
 

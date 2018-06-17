@@ -924,7 +924,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (mocker-let
      ((file-exists-p (f) ((:output t :occur 2)))
-      (load (f) ((:output nil :occur 1))))
+      (load (f &optional noerr nomsg) ((:output nil :occur 1))))
      (should (equal (cfgl-layer "layer"
                                 :name 'layer
                                 :disabled-for nil
@@ -943,7 +943,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (mocker-let
      ((file-exists-p (f) ((:output t :occur 2)))
-      (load (f) ((:output nil :occur 1))))
+      (load (f &optional noerr nomsg) ((:output nil :occur 1))))
      (should (equal (cfgl-layer "layer"
                                 :name 'layer
                                 :disabled-for nil
@@ -976,7 +976,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (mocker-let
      ((file-exists-p (f) ((:output t :occur 2)))
-      (load (f) ((:output nil :occur 1))))
+      (load (f &optional noerr nomsg) ((:output nil :occur 1))))
      (should (equal (cfgl-layer "layer"
                                 :name 'layer
                                 :disabled-for '(pkg8 pkg9)
@@ -1019,7 +1019,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (mocker-let
      ((file-exists-p (f) ((:output t :occur 2)))
-      (load (f) ((:output nil :occur 1))))
+      (load (f &optional noerr nomsg) ((:output nil :occur 1))))
      (should (equal (cfgl-layer "layer"
                                 :name 'layer
                                 :disabled-for '(pkg8 pkg9)
@@ -1151,47 +1151,55 @@
 ;; ---------------------------------------------------------------------------
 
 (ert-deftest test-set-layers-variables--none ()
-  (let ((input `(,(cfgl-layer "layer"
-                              :name 'layer
-                              :dir "/a/path/")))
+  (let ((configuration-layer--indexed-layers (make-hash-table :size 1024))
         (var 'foo))
-    (configuration-layer//set-layers-variables input)
+    (helper--add-layers
+     `(,(cfgl-layer "layer"
+                    :name 'layer
+                    :dir "/a/path/")))
+    (configuration-layer//set-layers-variables '(layer))
     (should (eq var 'foo))))
 
 (ert-deftest test-set-layers-variables--one-value ()
-  (let ((input `(,(cfgl-layer "layer"
-                              :name 'layer
-                              :dir "/a/path/"
-                              :variables '(var1 'bar)))))
+  (let ((configuration-layer--indexed-layers (make-hash-table :size 1024)))
+    (helper--add-layers
+     `(,(cfgl-layer "layer"
+                    :name 'layer
+                    :dir "/a/path/"
+                    :variables '(var1 'bar))))
     (setq var1 'foo)
-    (configuration-layer//set-layers-variables input)
+    (configuration-layer//set-layers-variables '(layer))
     (should (eq var1 'bar))))
 
 (ert-deftest test-set-layers-variables--multiple-values ()
-  (let ((input `(,(cfgl-layer "layer"
-                              :name 'layer
-                              :dir "/a/path/"
-                              :variables '(var1 'bar1 var2 'bar2 var3 'bar3)))))
+  (let ((configuration-layer--indexed-layers (make-hash-table :size 1024)))
+    (helper--add-layers
+     `(,(cfgl-layer "layer"
+                    :name 'layer
+                    :dir "/a/path/"
+                    :variables '(var1 'bar1 var2 'bar2 var3 'bar3))))
     (setq var1 'foo)
     (setq var2 'foo)
     (setq var3 'foo)
-    (configuration-layer//set-layers-variables input)
+    (configuration-layer//set-layers-variables '(layer))
     (should (eq var1 'bar1))
     (should (eq var2 'bar2))
     (should (eq var3 'bar3))))
 
 (ert-deftest test-set-layers-variables--odd-number-of-values ()
-  (let ((input `(,(cfgl-layer "layer"
-                              :name 'layer
-                              :dir "/a/path/"
-                              :variables '(var1 'bar var2)))))
+  (let ((configuration-layer--indexed-layers (make-hash-table :size 1024)))
+    (helper--add-layers
+     `(,(cfgl-layer "layer"
+                    :name 'layer
+                    :dir "/a/path/"
+                    :variables '(var1 'bar var2))))
     (mocker-let
      ((configuration-layer//warning
        (msg &rest args)
        ((:record-cls 'mocker-stub-record :output nil :occur 1))))
      (setq var1 'foo)
      (setq var2 'foo)
-     (configuration-layer//set-layers-variables input)
+     (configuration-layer//set-layers-variables '(layer))
      (should (eq var1 'bar))
      (should (eq var2 'foo)))))
 
@@ -2213,7 +2221,7 @@
     (defun layer1/init-pkg () (push 'init witness))
     (defun layer2/pre-init-pkg () (push 'pre-init witness))
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil))))
+     ((spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (should (equal '(init pre-init) witness)))))
 
@@ -2231,7 +2239,7 @@
     (defun layer1/init-pkg () (push 'init witness))
     (defun layer2/post-init-pkg () (push 'post-init witness))
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil))))
+     ((spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (should (equal '(post-init init) witness)))))
 
@@ -2243,7 +2251,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) ((:occur 1)))
-      (spacemacs-buffer/loading-animation nil ((:output nil))))
+      (spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
 (ert-deftest test-configure-packages-2--site-package-is-configured()
@@ -2254,7 +2262,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) ((:occur 1)))
-      (spacemacs-buffer/loading-animation nil ((:output nil))))
+      (spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
 (ert-deftest test-configure-packages-2--toggle-t-is-configured ()
@@ -2265,7 +2273,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) ((:occur 1)))
-      (spacemacs-buffer/loading-animation nil ((:output nil))))
+      (spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
 (ert-deftest test-configure-packages-2--toggle-nil-is-not-configured ()
@@ -2276,7 +2284,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) nil)
-      (spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
@@ -2288,7 +2296,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) ((:occur 1)))
-      (spacemacs-buffer/loading-animation nil ((:output nil))))
+      (spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
 (ert-deftest test-configure-packages-2--protected-excluded-package-is-configured()
@@ -2299,7 +2307,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) ((:occur 1)))
-      (spacemacs-buffer/loading-animation nil ((:output nil))))
+      (spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
 (ert-deftest test-configure-packages-2--excluded-package-is-not-configured()
@@ -2310,7 +2318,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) nil)
-      (spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
@@ -2322,7 +2330,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) nil)
-      (spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
@@ -2335,7 +2343,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) nil)
-      (spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
@@ -2347,7 +2355,7 @@
     (helper--add-packages (list pkg) t)
     (mocker-let
      ((configuration-layer//configure-package (p) nil)
-      (spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name))))))
 
@@ -2363,7 +2371,7 @@
     (helper--add-layers `(,(cfgl-layer "layer1" :name 'layer1 :dir "/path/")) t)
     (helper--add-packages (list pkg) t)
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil)))
+     ((spacemacs/update-progress-bar nil ((:output nil)))
       (configuration-layer//configure-package (p) ((:occur 1))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (push "/path/local/pkg/" expected-load-path)
@@ -2378,7 +2386,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (helper--add-packages (list pkg) t)
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil))))
+     ((spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (push (file-name-as-directory
             (concat configuration-layer-private-directory "local/pkg"))
@@ -2394,7 +2402,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (helper--add-packages (list pkg) t)
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil)))
+     ((spacemacs/update-progress-bar nil ((:output nil)))
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (should (equal load-path old-load-path)))))
@@ -2411,7 +2419,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (helper--add-packages (list pkg) t)
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil))))
+     ((spacemacs/update-progress-bar nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,(oref pkg :name)))
      (push spacemacs-docs-directory expected-load-path)
      (should (equal expected-load-path load-path)))))
@@ -2427,7 +2435,7 @@
         (mocker-mock-default-record-cls 'mocker-stub-record))
     (helper--add-packages (list pkg) t)
     (mocker-let
-     ((spacemacs-buffer/loading-animation nil ((:output nil)))
+     ((spacemacs/update-progress-bar nil ((:output nil)))
       (configuration-layer//warning
        (msg &rest args)
        ((:record-cls 'mocker-stub-record :output nil :occur 1))))
