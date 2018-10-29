@@ -100,6 +100,7 @@ automatically applied to."
 (defalias 'spacemacs/switch-to-buffer-other-frame 'switch-to-buffer-other-frame)
 (defalias 'spacemacs/insert-file 'insert-file)
 (defalias 'spacemacs/display-buffer-other-frame 'display-buffer-other-frame)
+(defalias 'spacemacs/find-file-and-replace-buffer 'find-alternate-file)
 
 (defun spacemacs/indent-region-or-buffer ()
   "Indent a region if selected, otherwise the whole buffer."
@@ -343,7 +344,8 @@ initialized with the current filename."
                                (format
                                 (concat "Buffer '%s' is not visiting a file: "
                                         "[s]ave to file or [r]ename buffer?")
-                                name) 'face 'minibuffer-prompt)))
+                                name)
+                               'face 'minibuffer-prompt)))
           (cond ((eq key ?s)            ; save to file
                  ;; this allows for saving a new empty (unmodified) buffer
                  (unless (buffer-modified-p) (set-buffer-modified-p t))
@@ -354,7 +356,8 @@ initialized with the current filename."
                      ;; ask to rename again, if the new buffer name exists
                      (if (yes-or-no-p
                           (format (concat "A buffer named '%s' already exists: "
-                                          "Rename again?") new-name))
+                                          "Rename again?")
+                                  new-name))
                          (setq new-name (read-string "New buffer name: "))
                        (keyboard-quit)))
                    (rename-buffer new-name)
@@ -562,6 +565,21 @@ ones created by `magit' and `dired'."
   (interactive)
   (if-let (file-path (spacemacs--file-path))
       (message "%s" (kill-new file-path))
+    (message "WARNING: Current buffer is not attached to a file!")))
+
+(defun spacemacs/copy-file-name ()
+  "Copy and show the file name of the current buffer."
+  (interactive)
+  (if-let (file-name (file-name-nondirectory (spacemacs--file-path)))
+      (message "%s" (kill-new file-name))
+    (message "WARNING: Current buffer is not attached to a file!")))
+
+(defun spacemacs/copy-file-name-base ()
+  "Copy and show the file name without its final extension of the current
+buffer."
+  (interactive)
+  (if-let (file-name (file-name-base (spacemacs--file-path)))
+      (message "%s" (kill-new file-name))
     (message "WARNING: Current buffer is not attached to a file!")))
 
 (defun spacemacs/copy-file-path-with-line ()
@@ -1227,23 +1245,6 @@ using a visual block/rectangle selection."
     (set-mark p1)))
 
 ;; END linum mouse helpers
-
-;; From http://xugx2007.blogspot.ca/2007/06/benjamin-rutts-emacs-c-development-tips.html
-(setq compilation-finish-function
-      (lambda (buf str)
-
-        (let ((case-fold-search nil))
-          (if (or (string-match "exited abnormally" str)
-                  (string-match "FAILED" (buffer-string)))
-
-              ;; there were errors
-              (message "There were errors. SPC-e-n to visit.")
-            (unless (or (string-match "Grep finished" (buffer-string))
-                        (string-match "Ag finished" (buffer-string))
-                        (string-match "nosetests" (buffer-name)))
-
-              ;; no errors
-              (message "compilation ok."))))))
 
 ;; from http://www.emacswiki.org/emacs/WordCount
 (defun spacemacs/count-words-analysis (start end)

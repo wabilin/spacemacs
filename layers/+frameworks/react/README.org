@@ -2,7 +2,7 @@
 
 [[file:img/react.png]]
 
-* Table of Contents                                         :TOC_4_gh:noexport:
+* Table of Contents                     :TOC_4_gh:noexport:
 - [[#description][Description]]
   - [[#features][Features:]]
 - [[#install][Install]]
@@ -43,11 +43,13 @@ If your project do not use a custom =.eslintrc= file I strongly advice you to
 try out this one by Airbnb:
 [[https://github.com/airbnb/javascript/blob/master/linters/.eslintrc][.eslintrc]]
 
-In order to use automatic code formatting you need to install ~js-beautify~
+React layer uses the same formatter defined in javascript layer. Options are
+=web-beautify= and =prettier=.
+To use automatic code formatting you need to install ~js-beautify~ or ~prettier~
 with:
 
 #+BEGIN_SRC sh
-  $ npm install -g js-beautify
+  $ npm install -g js-beautify prettier
 #+END_SRC
 
 If you install these in non-standard locations, then add the following to your
@@ -82,7 +84,8 @@ is my configuration as an example:
     "wrap_attributes": "auto",
     "wrap_attributes_indent_size": 2,
     "e4x": true,
-    "end_with_newline": true
+    "end_with_newline": true,
+    "brace_style": "collapse-preserve-inline"
   }
 #+END_SRC
 
@@ -93,7 +96,7 @@ behaviour.
 For example to have a consistent 2 spaces indenting both on =js= and =jsx= you
 may use these settings:
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq-default
    ;; js2-mode
    js2-basic-offset 2
@@ -103,17 +106,17 @@ may use these settings:
    web-mode-css-indent-offset 2
    web-mode-code-indent-offset 2
    web-mode-attr-indent-offset 2)
-#+end_src
+#+END_SRC
 
-And if you want to have 2 space indent also for element's attributes,
+And if you want to have 2 space indent also for element’s attributes,
 concatenations and contiguous function calls:
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (with-eval-after-load 'web-mode
     (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
     (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
     (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil)))
-#+end_src
+#+END_SRC
 
 * Key Bindings
 ** rjsx-mode
