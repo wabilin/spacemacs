@@ -1,4 +1,4 @@
-;;; config.el --- Chrome Layer functions File for Spacemacs
+;;; layers.el --- C/C++ Layer declarations File for Spacemacs
 ;;
 ;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
 ;;
@@ -9,5 +9,6 @@
 ;;
 ;;; License: GPLv3
 
-(defvar chrome-exec-path nil
-  "The chrome browser installation directory")
+(when (and (boundp 'c-c++-backend)
+           (member c-c++-backend '(lsp-cquery lsp-ccls)))
+  (configuration-layer/declare-layer 'lsp))
