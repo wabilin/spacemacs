@@ -62,6 +62,7 @@
         "fL"  'counsel-locate
         ;; help
         "?"   'counsel-descbinds
+        "hda" 'counsel-apropos
         "hdf" 'counsel-describe-function
         "hdF" 'counsel-describe-face
         "hdm" 'spacemacs/describe-mode
@@ -119,6 +120,11 @@
         "stP" 'spacemacs/search-project-pt-region-or-symbol))
     :config
     (progn
+      ;; Temporarily handle older versions of ivy
+      ;; https://github.com/abo-abo/swiper/pull/1863/files
+      (unless (fboundp 'counsel--elisp-to-pcre)
+        (defalias 'counsel--elisp-to-pcre 'counsel-unquote-regex-parens))
+
       ;; set additional ivy actions
       (ivy-set-actions
        'counsel-find-file

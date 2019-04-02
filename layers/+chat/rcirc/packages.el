@@ -20,6 +20,8 @@
         persp-mode
         rcirc
         rcirc-color
+        (rcirc-late-fix :location local
+                        :toggle rcirc-enable-late-fix)
         rcirc-notify
         ))
 
@@ -63,6 +65,7 @@
                                          rcirc-track-minor-mode))
 
       (spacemacs/set-leader-keys "air" 'spacemacs/rcirc)
+      (spacemacs/declare-prefix "ai"  "irc")
       (evil-set-initial-state 'rcirc-mode 'insert))
       (setq rcirc-fill-column 80
             rcirc-buffer-maximum-lines 2048
@@ -103,6 +106,12 @@
 
 (defun rcirc/init-rcirc-color ()
   (use-package rcirc-color :defer t))
+
+(defun rcirc/init-rcirc-late-fix ()
+  (spacemacs|use-package-add-hook rcirc
+    :post-config
+    (when rcirc-enable-late-fix
+      (use-package rcirc-late-fix))))
 
 (defun rcirc/init-rcirc-notify ()
   (use-package rcirc-notify
