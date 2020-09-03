@@ -1,6 +1,6 @@
 ;;; packages.el --- shell packages File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -9,27 +9,29 @@
 ;;
 ;;; License: GPLv3
 
-(setq shell-packages
-      '(
-        (comint :location built-in)
-        company
-        esh-help
-        (eshell :location built-in)
-        eshell-prompt-extras
-        eshell-z
-        helm
-        ivy
-        magit
-        multi-term
-        org
-        projectile
-        (shell :location built-in)
-        shell-pop
-        (term :location built-in)
-        xterm-color
-        vi-tilde-fringe
-        (vterm :toggle (not (spacemacs/system-is-mswindows)))
-        ))
+(defconst shell-packages
+  '(
+    (comint :location built-in)
+    company
+    esh-help
+    (eshell :location built-in)
+    eshell-prompt-extras
+    eshell-z
+    helm
+    ivy
+    magit
+    multi-term
+    org
+    projectile
+    (shell :location built-in)
+    shell-pop
+    (term :location built-in)
+    xterm-color
+    terminal-here
+    vi-tilde-fringe
+    window-purpose
+    (vterm :toggle (not (spacemacs/system-is-mswindows)))))
+
 
 (defun shell/init-comint ()
   (setq comint-prompt-read-only t)
@@ -139,13 +141,10 @@
 
 (defun shell/init-eshell-z ()
   (use-package eshell-z
-    :defer t
+    :after eshell
     :init
-    (progn
-      (setq eshell-z-freq-dir-hash-table-file-name
-            (concat spacemacs-cache-directory "eshell/.z"))
-      (with-eval-after-load 'eshell
-        (require 'eshell-z)))))
+    (setq eshell-z-freq-dir-hash-table-file-name
+          (concat spacemacs-cache-directory "eshell/.z"))))
 
 (defun shell/pre-init-helm ()
   (spacemacs|use-package-add-hook helm
@@ -231,25 +230,34 @@
       (setq shell-pop-window-position shell-default-position
             shell-pop-window-size     shell-default-height
             shell-pop-term-shell      shell-default-term-shell
-            shell-pop-full-span       shell-default-full-span
-            shell-pop-in-after-hook   #'evil-insert-state)
+            shell-pop-full-span       shell-default-full-span)
       (make-shell-pop-command "eshell" eshell)
       (make-shell-pop-command "term" term shell-pop-term-shell)
       (make-shell-pop-command "ansi-term" ansi-term shell-pop-term-shell)
       (make-shell-pop-command "inferior-shell" inferior-shell)
       (make-shell-pop-command "multiterm" multiterm)
 
+      (let* ((initial-shell-mode-name (format "%S-mode" shell-default-shell))
+             (initial-shell-mode (intern initial-shell-mode-name)))
+        (evil-set-initial-state initial-shell-mode 'insert))
+
+      (when (fboundp 'spacemacs/make-variable-layout-local)
+        (spacemacs/make-variable-layout-local 'shell-pop-last-shell-buffer-index 1
+                                              'shell-pop-last-shell-buffer-name ""
+                                              'shell-pop-last-buffer nil))
+
       (add-hook 'term-mode-hook 'ansi-term-handle-close)
 
       (spacemacs/set-leader-keys
         "'"   'spacemacs/default-pop-shell
-        "ase" 'spacemacs/shell-pop-eshell
-        "asi" 'spacemacs/shell-pop-inferior-shell
-        "asm" 'spacemacs/shell-pop-multiterm
-        "ast" 'spacemacs/shell-pop-ansi-term
-        "asT" 'spacemacs/shell-pop-term)
-      (spacemacs/declare-prefix "'" "open shell")
-      (spacemacs/declare-prefix "as" "shells"))))
+        "atse" 'spacemacs/shell-pop-eshell
+        "atsi" 'spacemacs/shell-pop-inferior-shell
+        "atsm" 'spacemacs/shell-pop-multiterm
+        "atst" 'spacemacs/shell-pop-ansi-term
+        "atsT" 'spacemacs/shell-pop-term)
+      (spacemacs/declare-prefix "'" "open shell"))
+    :config
+    (add-hook 'shell-pop-out-hook #'spacemacs//shell-pop-restore-window)))
 
 (defun shell/init-term ()
   (spacemacs/register-repl 'term 'term)
@@ -293,6 +301,18 @@
             (remove 'ansi-color-process-output comint-output-filter-functions))
       (add-hook 'eshell-mode-hook 'spacemacs/init-eshell-xterm-color))))
 
+(defun shell/init-terminal-here ()
+  (use-package terminal-here
+    :defer t
+    :commands (terminal-here-launch terminal-here-project-launch)
+    :init
+    (progn
+      (spacemacs/register-repl 'terminal-here 'terminal-here)
+      (spacemacs/set-leader-keys
+        "\"" 'terminal-here-launch
+        "p \"" 'terminal-here-project-launch))))
+
+
 (defun shell/post-init-vi-tilde-fringe ()
   (spacemacs/add-to-hooks 'spacemacs/disable-vi-tilde-fringe
                           '(comint-mode-hook
@@ -308,23 +328,35 @@
     :init
     (progn
       (make-shell-pop-command "vterm" vterm)
-      (spacemacs/set-leader-keys "asv" 'spacemacs/shell-pop-vterm)
+      (spacemacs/set-leader-keys "atsv" 'spacemacs/shell-pop-vterm)
       (spacemacs/register-repl 'vterm 'vterm))
 
     :config
     (progn
+      (setq vterm-shell shell-default-term-shell)
+
+      (define-key vterm-mode-map (kbd "M-n") 'vterm-send-down)
+      (define-key vterm-mode-map (kbd "M-p") 'vterm-send-up)
+      (define-key vterm-mode-map (kbd "M-y") 'vterm-yank-pop)
+      (define-key vterm-mode-map (kbd "M-/") 'vterm-send-tab)
+
+      (evil-define-key 'insert vterm-mode-map (kbd "C-y") 'vterm-yank)
+
       (evil-define-key 'normal vterm-mode-map
-        [escape] 'vterm--self-insert
-        [return] 'vterm--self-insert)
+        [escape] 'vterm-send-escape
+        [return] 'vterm-send-return
+        (kbd "p") 'vterm-yank
+        (kbd "u") 'vterm-undo)
 
       (add-hook 'vterm-mode-hook 'spacemacs/disable-hl-line-mode)
 
       (with-eval-after-load 'centered-cursor-mode
-        (add-hook 'vterm-mode-hook 'spacemacs//inhibit-global-centered-cursor-mode))
+        (add-hook 'vterm-mode-hook 'spacemacs//inhibit-global-centered-cursor-mode)))))
 
-      (with-eval-after-load 'window-purpose
-        (purpose-set-extension-configuration
-         :vterm
-         (purpose-conf "vterm"
-                       :mode-purposes
-                       '((vterm-mode . terminal))))))))
+(defun shell/post-init-window-purpose ()
+  (purpose-set-extension-configuration
+   :shell-layer
+   (purpose-conf :mode-purposes '((vterm-mode . terminal)
+                                  (eshell-mode . terminal)
+                                  (shell-mode . terminal)
+                                  (term-mode . terminal)))))

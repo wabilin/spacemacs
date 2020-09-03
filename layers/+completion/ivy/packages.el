@@ -62,12 +62,14 @@
         "fL"  'counsel-locate
         ;; help
         "?"   'counsel-descbinds
+        "gff" 'counsel-git
         "hda" 'counsel-apropos
         "hdf" 'counsel-describe-function
         "hdF" 'counsel-describe-face
         "hdm" 'spacemacs/describe-mode
         "hdv" 'counsel-describe-variable
         "hi"  'counsel-info-lookup-symbol
+        "hm"  (if (spacemacs/system-is-mswindows) 'woman 'man)
         "hR"  'spacemacs/counsel-search-docs
         ;; insert
         "iu"  'counsel-unicode-char
@@ -130,15 +132,24 @@
        'counsel-find-file
        spacemacs--ivy-file-actions)
 
-      (define-key counsel-find-file-map (kbd "C-h") 'counsel-up-directory)
+      (when (or (eq 'vim dotspacemacs-editing-style)
+                (and (eq 'hybrid dotspacemacs-editing-style)
+                     hybrid-style-enable-hjkl-bindings))
+        (define-key counsel-find-file-map (kbd "C-h") 'counsel-up-directory))
+
       (define-key read-expression-map (kbd "C-r") 'counsel-minibuffer-history)
+      (spacemacs//counsel-search-add-extra-bindings counsel-ag-map)
       ;; remaps built-in commands that have a counsel replacement
       (counsel-mode 1)
       (spacemacs|hide-lighter counsel-mode)
       ;; TODO Commands to port
       (spacemacs//ivy-command-not-implemented-yet "jI")
       ;; Set syntax highlighting for counsel search results
-      (ivy-set-display-transformer 'spacemacs/counsel-search 'counsel-git-grep-transformer))))
+      (ivy-set-display-transformer 'spacemacs/counsel-search
+                                   'counsel-git-grep-transformer)
+      ;; Enable better auto completion of counsel-find-file
+      ;; by recognizing file at point.
+      (setq counsel-find-file-at-point t))))
 
 (defun ivy/pre-init-counsel-projectile ()
   ;; overwrite projectile settings
@@ -191,6 +202,9 @@
       ;; Key bindings
       (spacemacs/set-leader-keys
         "a'" 'spacemacs/ivy-available-repls
+        "Ce" 'counsel-colors-emacs
+        "Cf" 'counsel-faces
+        "Cw" 'counsel-colors-web
         "fr" 'counsel-recentf
         "rl" 'ivy-resume
         "bb" 'ivy-switch-buffer)

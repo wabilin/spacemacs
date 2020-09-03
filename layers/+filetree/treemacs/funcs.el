@@ -1,4 +1,4 @@
-;;; funcs.el --- Treemacs Layer functions File
+;;; funcs.el --- Treemacs Layer functions File for Spacemacs
 ;;
 ;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
 ;;
@@ -27,4 +27,5 @@
   (interactive)
   (unless (eq (not treemacs--width-is-locked)
               (not treemacs-lock-width))
-    (treemacs-toggle-fixed-width)))
+    (treemacs-without-messages
+     (treemacs-toggle-fixed-width))))
