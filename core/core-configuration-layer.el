@@ -1,7 +1,7 @@
 ;; -*- nameless-current-name: "configuration-layer" -*-
 ;;; core-configuration-layer.el --- Spacemacs Core File
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -214,7 +214,7 @@ LAYER has to be installed for this method to work properly."
     (when (and (numberp rank)
                (not (eq 'unspecified shadow-candidates))
                (listp shadow-candidates))
-      (mapcar
+      (mapc
        (lambda (other)
          (let ((orank (cl-position other configuration-layer--used-layers)))
            ;; OTHER shadows LAYER if and only if OTHER's rank is bigger than
@@ -2172,8 +2172,11 @@ to update."
         (spacemacs-buffer/append
          (format
           (concat "\nEmacs has to be restarted to actually install the "
-                  "new version of the packages%s.\n")
-          (if (member "restart-emacs" update-packages) "" " (SPC q r)")))
+                  "new version of the packages %s.\n")
+          (if (member 'restart-emacs update-packages)
+              (concat "\n(SPC q r) won't work this time, "
+                      "because the restart-emacs package is being updated")
+            "(SPC q r)")))
         (configuration-layer//cleanup-rollback-directory)
         (spacemacs//redisplay)))
     (when (eq upgrade-count 0)
@@ -2458,7 +2461,7 @@ depends on it."
   (let ((layer-name
          (intern (completing-read
                   "Choose a used layer"
-                  (sort (copy-list configuration-layer--used-layers) #'string<)))))
+                  (sort (cl-copy-list configuration-layer--used-layers) #'string<)))))
     (let ((mode-exts (configuration-layer//lazy-install-extensions-for-layer
                       layer-name)))
       (dolist (x mode-exts)
@@ -2604,7 +2607,7 @@ Returns nil if the version is unknown."
   (when (file-exists-p configuration-layer--stable-elpa-version-file)
     (with-current-buffer (find-file-noselect
                           configuration-layer--stable-elpa-version-file)
-      (when (called-interactively-p)
+      (when (called-interactively-p 'interactive)
         (message "Stable ELPA repository version is: %s" (buffer-string)))
       (buffer-string))))
 
@@ -2652,7 +2655,7 @@ MSG is an additional message append to the generic error."
   (with-current-buffer (find-file-noselect
                         configuration-layer--stable-elpa-version-file)
     (erase-buffer)
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (insert (format "%s" configuration-layer-stable-elpa-version))
     (save-buffer)))
 

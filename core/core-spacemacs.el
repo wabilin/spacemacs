@@ -1,6 +1,6 @@
 ;;; core-spacemacs.el --- Spacemacs Core File
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -33,6 +33,7 @@
 (require 'core-transient-state)
 (require 'core-use-package-ext)
 (require 'core-spacebind)
+(require 'core-compilation)
 
 (defgroup spacemacs nil
   "Spacemacs customizations."
@@ -43,6 +44,8 @@
   "Hook run after dotspacemacs/user-config")
 (defvar spacemacs-post-user-config-hook-run nil
   "Whether `spacemacs-post-user-config-hook' has been run")
+(defvar spacemacs-scratch-mode-hook nil
+  "Hook run on buffer *scratch* after `dotspacemacs-scratch-mode' is invoked.")
 
 (defvar spacemacs--default-mode-line mode-line-format
   "Backup of default mode line format.")
@@ -156,6 +159,9 @@ the final step of executing code in `emacs-startup-hook'.")
   (if (fboundp 'dotspacemacs/user-env)
       (dotspacemacs/call-user-env)
     (spacemacs/load-spacemacs-env))
+  ;; Ensure that `spacemacs-compiled-files' are compiled.
+  (let ((default-directory spacemacs-start-directory))
+    (spacemacs//ensure-compilation spacemacs-compiled-files))
   ;; install the dotfile if required
   (dotspacemacs/maybe-install-dotfile))
 
@@ -230,7 +236,8 @@ Note: the hooked function is not executed when in dumped mode."
      (setq spacemacs-post-user-config-hook-run t)
      (when (fboundp dotspacemacs-scratch-mode)
        (with-current-buffer "*scratch*"
-         (funcall dotspacemacs-scratch-mode)))
+         (funcall dotspacemacs-scratch-mode)
+         (run-hooks 'spacemacs-scratch-mode-hook)))
      (when spacemacs--delayed-user-theme
        (spacemacs/load-theme spacemacs--delayed-user-theme
                              spacemacs--fallback-theme t))
